@@ -1,0 +1,15 @@
+/data/logs/uwsgi/*.log /var/log/default.log{
+      #  su root list
+#	hourly
+	daily
+        missingok #如果日志丢失，不报错继续滚动下一个日志
+        rotate 52 
+        compress #压缩
+        delaycompress
+	dateext  #日期 
+        notifempty #日志文件为空时，不进行轮转 
+        create 0640 nginx adm 
+       # sharedscripts 
+	copytruncate
+}
+

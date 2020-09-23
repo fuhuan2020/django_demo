@@ -1,0 +1,38 @@
+.loading {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 9999;
+    background-color: white;
+    opacity: 0.2;
+
+}
+
+.loading .gif {
+    height: 32px;
+    width: 32px;
+    background: url('/static/assets/image/loading.gif');
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    margin-left: -16px;
+    margin-top: -16px;
+    z-index: 10000;
+}
+
+.hdle {
+    display: none;
+}
+
+.ping-title {
+    height: 40px;
+    width: 75px;
+    text-align: center;
+    padding: 5px;
+    display: inline-block;
+}
+.ping-title-background-w{
+    background-color: white;
+}

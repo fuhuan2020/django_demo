@@ -1,0 +1,10 @@
+prettytable ==0.7.2
+Django==2.0.3
+django-crontab==0.7.1
+eventlet==0.25.0
+requests ==2.20.1
+uWSGI==2.0.17.1
+paramiko==2.6.0
+captcha==0.3
+requests-toolbelt==0.9.1 
+django-simple-captcha==0.5.12

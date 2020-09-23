@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}vnc{% endblock %}
+
+{% block css %}
+<link rel="stylesheet"
+      href="{% static 'adminlet-2.4.10/bower_components/datatables.net-bs/css/dataTables.bootstrap.css' %}">
+<link rel="stylesheet"
+      href="{% static 'assets/css/ping.css' %}">
+<style>
+    .my-select {
+        width: 100%;
+        height: 100%;
+    }
+
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        vnc
+        <small>(ipmi)</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> 主页</a></li>
+        <li class="active">vnc</li>
+    </ol>
+</section>
+{% endblock %}
+
+{% block content %}
+
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        <div class="col-xs-12">
+
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">使用方法
+                        <small>(不含软件)</small>
+                    </h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    {% if protocol %}
+                    <input type="hidden" id="protocol" value="{{protocol}}">
+                    {% else %}
+                    <input type="hidden" id="protocol" value="">
+                    {% endif%}
+                    <p>1、必须先进超管平台开启对应ipmi端口</p>
+                    <p>2、填入对应地区，填入相应ipmi</p>
+                    <p>3、再点击开启vnc</p>
+                    <p>4、如果进入页面ipmi窗口未开启，请关掉窗口重新尝试，如仍不行请前往windows管理机开启</p>
+
+                    <h4>一、vnc+kvm+ipmi连接模式(用于没办法的情况下，类似于进windows管理机打开ipmi) ↓</h4>
+                    <div class="hdle">
+                        <table id="assets_table" class="table table-bordered table-striped">
+                            {% csrf_token %}
+                            <tfoot>
+                            <tr>
+                                <th>地区</th>
+                                <th>ipmi</th>
+                            </tr>
+                            <tr>
+                                <th><select class="my-select">
+                                    <option value="hangksanqu">香港三区</option>
+                                    <option value="hangkyiqu">香港一区</option>
+                                    <option value="jinan">济南</option>
+                                    <option value="ningbo">宁波</option>
+                                    <option value="shengheshai">圣何塞</option>
+                                </select></th>
+                                <th><input id="ipmi" type="text" placeholder="ipmi"></th>
+                            </tr>
+                            </tfoot>
+
+                        </table>
+
+                        <button id="open-vnc" type="submit" name="open_vnc">开启vnc</button>
+                        <div class="div-height-5"></div>
+                        <div class="div-height-5"></div>
+                    </div>
+
+
+                    <h4>二、webconn+vnc连接模式(适用于查看管理机R630自带vnc) ↓</h4>
+                    <div class="hdle">
+                        <h5>&nbsp&nbsp *c6220机器不支持</h5>
+                        <div>
+                            <form id="connect" action="" method="post" target="_blank" enctype=t"multipart/form-daa">
+                                {% csrf_token %}
+                                <div>
+                                    <input type="hidden" name="protocol" value="vnc" autocomplete="off">
+                                    <ul>
+                                        <li>
+                                            <div>地区(内网连接需要选择地区)</div>
+                                            <select class="my-select" name="diqu">
+                                                <option value="hangksanqu">香港三区</option>
+                                                <option value="hangkyiqu">香港一区</option>
+                                                <option value="jinan">济南</option>
+                                                <option value="ningbo">宁波</option>
+                                                <option value="shengheshai">圣何塞</option>
+                                            </select>
+
+                                        </li>
+                                        <li>
+                                            <div for="Hostname">IPMI</div>
+                                            <a href="javascript:;" class="">
+                                                <input type="text" name="hostname" placeholder="请填写IP"
+                                                       value="192.168.9.34"
+                                                       autocomplete="off">
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <div for="Port">VNC端口</div>
+                                            <a href="javascript:;" class="">
+                                                <input type="number" id="port" name="port" value="5901" required
+                                                       placeholder="请填写" min=1 max=65535 autocomplete="off">
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <button type="submit" class="submit_now">连接</button>
+                                </div>
+                            </form>
+
+                            <!--<button id="webconn" type="submit" name="open_vnc">连接</button>-->
+                        </div>
+                        <div class="div-height-5"></div>
+                        <div class="div-height-5"></div>
+                    </div>
+                    <h4>三、webconn+rdp连接模式(适用于连接windows系统内外网ip都可) ↓</h4>
+                    <div class="hdle">
+                        <form id="conn_rdp" action="" method="post" target="_blank" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div>
+                                <ul>
+                                    <li>
+                                        <div>地区(内网连接需要选择地区)</div>
+                                        <select class="my-select" name="diqu">
+                                            {% if protocol and diqu%}
+                                            <option value="{{diqu}}">{{diqu}}</option>
+                                            {% else%}
+                                            <option value="hangksanqu">香港三区</option>
+                                            <option value="hangkyiqu">香港一区</option>
+                                            <option value="jinan">济南</option>
+                                            <option value="ningbo">宁波</option>
+                                            <option value="shengheshai">圣何塞</option>
+                                            {% endif%}
+
+                                        </select>
+
+                                    </li>
+                                    <li>
+                                        <div for="Hostname">IP</div>
+                                        {% if protocol and gongwang_ip%}
+                                        <input type="text" name="hostname" placeholder="请填写IP"
+                                               value="{{gongwang_ip}}"
+                                               autocomplete="off">
+
+                                        {% else%}
+                                        <input type="text" name="hostname" placeholder="请填写IP"
+                                               value="192.168.88.104"
+                                               autocomplete="off">
+                                        {% endif%}
+                                    </li>
+                                    <input type="hidden" name="protocol" id="rdp" value="rdp">
+                                    <li>
+                                        <div for="Username">用户名</div>
+                                        <input type="text" id="username" name="username" value="Administrator"
+                                               placeholder="请填写用户名" autocomplete="off">
+                                    </li>
+                                    <li>
+                                        <div for="password">密码</div>
+                                        <input type="password" name="password" value="" placeholder="请填写密码"
+                                               autocomplete="off">
+                                    </li>
+                                    <li>
+                                        <div for="Port">端口</div>
+                                        <a href="javascript:;" class="">
+                                            <input type="number" name="port" value="3389" required placeholder="请填写"
+                                                   min=1 max=65535 autocomplete="off">
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>
+                                <button type="submit" class="submit_now">连接</button>
+                            </div>
+
+                        </form>
+                    </div>
+
+                    <h4>四、webssh+ipmi+sol连接模式(适用于无法进入linux物理机) ↓</h4>
+                    <div class="hdle">
+                        <form action="" method="post" target="_blank" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div>
+                                <input type="hidden" name="protocol" value="ipmi_sol" autocomplete="off">
+                                <ul>
+
+                                    <select class="my-select" name="diqu">
+                                        <option value="hangksanqu">香港三区</option>
+                                        <option value="hangkyiqu">香港一区</option>
+                                        <option value="jinan">济南</option>
+                                        <option value="ningbo">宁波</option>
+                                        <option value="shengheshai">圣何塞</option>
+                                    </select>
+                                    <li>
+                                        <div for="Hostname">IPMI</div>
+                                        <input type="text" name="hostname" placeholder="请填写IP" value="192.168.9.35"
+                                               autocomplete="off">
+                                    </li>
+
+                                </ul>
+                            </div>
+                            <div>
+                                <button type="submit" class="submit_now">连接</button>
+                            </div>
+
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+    </div>
+    <!-- /.col -->
+    <!-- /.row -->
+</section>
+
+{% endblock %}
+
+{% block script %}
+
+<script src="{% static 'adminlet-2.4.10/bower_components/datatables.net/js/jquery.dataTables.js' %}"></script>
+<script src="{% static 'adminlet-2.4.10/bower_components/datatables.net-bs/js/dataTables.bootstrap.js' %}"></script>
+
+<script>
+
+    $(function () {
+        $("#open-vnc").click(function () {
+            var value = $(".my-select").val();
+            var ipmi = $("#ipmi").val();
+            $.ajax({
+                url: "",
+                type: "POST",
+                dataType: 'json',
+                data: {diqu: value, ipmi: ipmi},
+                success: function (json) {
+
+                    if (json) {
+                        if (String(json.result) === "000") {
+                            console.log(json.data);
+                            window.open(json.data.url);
+
+                        } else if (json.result === "111") {
+                            window.location.reload();
+
+                        }
+                        else {
+                            window.alert(json.desc);
+
+                        }
+                    } else {
+                        window.alert("请求错误");
+                    }
+
+
+                }
+
+            });
+        });
+        var connect = $("#connect");
+        var connect_rdp = $("#conn_rdp");
+        var widthInput = $("<input type='hidden' name='screenWidth' />");
+        var heightInput = $("<input type='hidden' name='screenHeight' />");
+        widthInput.attr("value", $(window).width());
+        heightInput.attr("value", $(window).height());
+        connect.append(widthInput);
+        connect.append(heightInput);
+        connect_rdp.append(widthInput);
+        connect_rdp.append(heightInput);
+
+
+        $("h4").click(function () {
+            var hdle = $(this).next().attr("hdle");
+            if (hdle && hdle === "0") {
+                $(this).next().addClass("hdle");
+                $(this).next().attr("hdle", "1");
+            } else {
+                $(this).next().removeClass();
+                $(this).next().attr("hdle", "0");
+            }
+
+        });
+        //进入初始化展开页面
+        var protocol_str=$("#protocol").val();
+        if (protocol_str==="gongwang_rdp"){
+            $("h4")[3].click();
+        }
+
+    });
+
+
+</script>
+
+{% endblock %}

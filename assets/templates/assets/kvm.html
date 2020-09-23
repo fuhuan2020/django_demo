@@ -1,0 +1,445 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}虚拟机{% endblock %}
+{% block css %}
+<style>
+
+    .dropbtn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 16px;
+        font-size: 16px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: #f9f9f9;
+        min-width: 100px;
+        margin-right: 15px;
+        z-index: 1000;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    }
+
+    .dropdown-content a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+    }
+
+    .dropdown-content a:hover {
+        background-color: #f1f1f1;
+    }
+
+    .dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    .dropdown:hover .dropbtn {
+        background-color: #3e8e41;
+    }
+</style>
+
+{% endblock %}
+
+{% block breadcrumb %}
+<!-- Content Header (Page header) -->
+<section class="content-header">
+    <h1>
+        虚拟机管理
+        <small>kvm</small>
+    </h1>
+    <ol class="breadcrumb">
+        <li><a href="#"><i class="fa fa-dashboard"></i> 主页</a></li>
+        <li class="active">kvm</li>
+    </ol>
+</section>
+{% endblock %}
+
+{% block content %}
+<!-- Main content -->
+<section class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- BAR CHART -->
+            <div class="box">
+                <!-- /.box-body -->
+                <div style="min-height: 500px">
+
+                    <div style="display: inline">
+
+                        <div class="box-body display-none" style="display: inline-block">
+                            <form action="" method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input class="action" type="hidden" name="form" value="kvm_host"
+                                       autocomplete="off">
+                                <select style="width: 150px" class="my-select" name="diqu">
+                                    {% for data in host_data_list %}
+                                    {% if data.selected%}
+                                    <option value="{{data.host}}" selected="selected">{{data.hostname}}</option>
+                                    {%else%}
+                                    <option value="{{data.host}}">{{data.hostname}}</option>
+                                    {%endif%}
+                                    {% endfor%}
+                                </select>
+                                <button style="margin-left: 10px" type="submit" class="submit_now" name="dir"
+                                        value="logs">显示kvm列表
+                                </button>
+
+
+                            </form>
+
+
+                        </div>
+                        <div class="box-body display-none" style="display: inline-block">
+                            <form action="" method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input class="action" type="hidden" name="form" value="kvm_images"
+                                       autocomplete="off">
+                                <select style="width: 150px" class="my-select" name="diqu">
+                                    {% for data in host_data_list %}
+                                    {% if data.selected%}
+                                    <option value="{{data.host}}" selected="selected">{{data.hostname}}</option>
+                                    {%else%}
+                                    <option value="{{data.host}}">{{data.hostname}}</option>
+                                    {%endif%}
+                                    {% endfor%}
+                                </select>
+                                <button style="margin-left: 10px" type="submit" class="submit_now" name="dir"
+                                        value="logs">显示镜像
+                                </button>
+
+                            </form>
+                        </div>
+                    </div>
+                    {% if error_message%}
+                    <div style="margin-left: 10px">{{error_message}}</div>
+                    {%endif%}
+
+                    {% if kvm_datas%}
+                    <div>
+
+                        <table id="assets_table" class="table table-bordered " cellspacing="0">
+                            <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>ip</th>
+                                <th>实例名称</th>
+                                <th>备注名称</th>
+                                <th>cpu</th>
+                                <th>内存(M)</th>
+                                <th>创建时间</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for data in kvm_datas%}
+                            <tr>
+                                <th>{{data.id}}</th>
+                                {% if data.eth0_ip%}
+                                <th><span>eth0:{{data.eth0_ip}}</span>
+                                </th>
+                                {%else %}
+                                <th>--</th>
+                                {%endif %}
+                                <th>{{data.name}}</th>
+                                {% if data.tag%}
+                                <th>{{data.tag}}</th>
+                                {%else %}
+                                <th>{{data.name}}</th>
+                                {%endif %}
+                                <th>{{data.cpu}}核</th>
+                                <th>{{data.memory}}</th>
+
+                                {% if data.create_time_str%}
+                                <th>{{data.create_time_str}}</th>
+                                {%else %}
+                                <th>--</th>
+                                {%endif %}
+                                <th>{{data.status}}</th>
+                                <th>
+                                    <div class="dropdown" style="float:left;">
+                                        <div>操作</div>
+                                        <div class="dropdown-content">
+                                            {% if data.power_on %}
+                                            <a onclick="power('{{data.name}}','{{data.uuid}}','{{diqu}}','stop')">关机</a>
+                                            <a onclick="power('{{data.name}}','{{data.uuid}}','{{diqu}}','reboot')">重启</a>
+                                            {% if local_bean %}
+                                            <a target="_blank"
+                                               href="http://{{local_bean.vnc_lite_host}}/vnc_lite.html?host={{local_bean.vnc_host}}&port={{local_bean.vnc_port}}&path=websockify/?token={{data.uuid}}">vnc</a>
+                                            {% endif %}
+                                            {% else %}
+                                            <a onclick="power('{{data.name}}','{{data.uuid}}','{{diqu}}','start')">开机</a>
+
+                                            {% endif %}
+
+                                            <a onclick="power('{{data.name}}','{{data.uuid}}','{{diqu}}','make_mirror')">打包镜像</a>
+                                            <a onclick="power('{{data.name}}','{{data.uuid}}','{{diqu}}','re_install')">重装</a>
+                                            <a onclick="power('{{data.name}}','{{data.uuid}}','{{diqu}}','add_eth1')">添加网卡</a>
+                                            <a onclick="power('{{data.name}}','{{data.uuid}}','{{diqu}}','destroy')">回收</a>
+                                            <a onclick="power('{{data.name}}','{{data.uuid}}','{{diqu}}','xiugai')">修改
+                                            </a>
+                                            <form action="" method="post" enctype="multipart/form-data">
+                                                {% csrf_token %}
+                                                <input class="action" type="hidden" name="form" value="xiugai"
+                                                       autocomplete="off">
+                                                <input class="action" type="hidden" name="diqu" value="{{diqu}}"
+                                                       autocomplete="off">
+                                                <input class="action" type="hidden" name="uuid"
+                                                       value="{{data.uuid}}"
+                                                       autocomplete="off">
+                                                <input class="action" type="hidden" name="name"
+                                                       value="{{data.name}}"
+                                                       autocomplete="off">
+                                                <button id="{{data.uuid}}" style="margin-left: 10px;display: none"
+                                                        type="submit">
+                                                </button>
+
+                                            </form>
+
+                                        </div>
+                                    </div>
+                                </th>
+                            </tr>
+                            {% endfor%}
+
+
+                            </tbody>
+
+                        </table>
+                    </div>
+                    {%endif%}
+
+                    <!-- 新创建机子-->
+                    {% if kvm_images%}
+                    <div class="box-body">
+                        <form action="" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input class="action" type="hidden" name="form" value="os_install"
+                                   autocomplete="off">
+                            <input class="action" type="hidden" name="diqu" value="{{host}}"
+                                   autocomplete="off">
+                            <div>
+                                <span>核数：</span>
+                                <select style="width: 150px" class="my-select" name="he">
+                                    {% for item in neihes %}
+                                    <option value="{{item}}">{{item}}核</option>
+                                    {% endfor %}
+
+                                </select>
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>内存：</span>
+                                <select style="width: 150px" class="my-select" name="memory">
+                                    {% for item in memorys %}
+                                    <option value="{{item}}">{{item}}M</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>硬盘：</span>
+                                <select style="width: 150px" class="my-select" name="disk">
+                                    {% for item in yingpans %}
+                                    <option value="{{item}}">{{item}}G</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>系统：</span>
+                                <select style="width: 200px" class="my-select" name="system">
+                                    {% for item in kvm_images %}
+                                    <option value="{{item}}">{{item}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>eth0：</span> <input type="text" name="eth0_ip" value="" placeholder="输入相应的ip,可选">
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>掩码：</span> <input type="text" name="eth0_net" value="" placeholder="输入正确的掩码">
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>名字：</span> <input type="text" name="tag" placeholder="起个名字">
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>备注：</span> <input type="text" name="desc" placeholder="备注">
+                            </div>
+
+
+                            <button id="osinstall" style="display: none" type="submit">创建
+                            </button>
+
+
+                        </form>
+                        <button style="margin-top: 10px" onclick="osinstall()">创建
+                        </button>
+                    </div>
+                    {%endif%}
+                    <!--修改备注 -->
+                    {% if xiugai%}
+                    <div class="box-body">
+                        <form action="" method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div>
+                                <span>port(vnc)：</span><span>{{info_bean.port}}</span>
+
+
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>实例名称：</span><span>{{info_bean.name}}</span>
+
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>cpu：</span><span>{{info_bean.cpu}}</span>
+
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>内存(M)：</span><span>{{info_bean.memory}}</span>
+
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>创建时间：</span><span>{{info_bean.create_time}}</span>
+
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>状态：</span><span>{{info_bean.status}}</span>
+
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>eth0：</span><input type="text" name="eth0_ip" value="{{info_bean.eth0_ip}}">
+
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>eth1：</span><input type="text" name="eth1_ip" value="{{info_bean.eth1_ip}}">
+
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>tag：</span><input type="text" name="tag" value="{{info_bean.tag}}">
+
+                            </div>
+                            <div style="margin-top: 5px">
+                                <span>备注：</span><input type="text" name="desc" value="{{info_bean.desc}}">
+
+                            </div>
+
+
+                            <input class="action" type="hidden" name="form" value="xiugai_"
+                                   autocomplete="off">
+                            <input class="action" type="hidden" name="diqu" value="{{diqu}}"
+                                   autocomplete="off">
+                            <input class="action" type="hidden" name="name" value="{{info_bean.name}}"
+                                   autocomplete="off">
+                            <button style="margin-top: 10px;" type="submit">提交
+                            </button>
+
+                        </form>
+
+                    </div>
+                    {%endif%}
+
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- /.col (RIGHT) -->
+    </div>
+    <!-- /.row -->
+</section>
+<!-- /.content -->
+
+{% endblock %}
+
+{% block script %}
+<script src="{% static 'adminlet-2.4.10/bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'adminlet-2.4.10/bower_components/datatables.net-bs/js/dataTables.bootstrap.js' %}"></script>
+<script>
+
+    function show_confirm(text, data, show) {
+        if (show) {
+            var r = window.confirm(text);//window.confirm("Press a button");
+            if (r === true) {
+                var action = data["action"];
+                if (action === "install_reset" || action === "re_install") {
+                    var b = confirm("确定？后果自负,不能反悔！");
+                    if (!b) {
+                        return
+                    }
+                }
+                run_Post_ajax(data);
+            }
+        }
+
+
+    }
+
+    function run_Post_ajax(data) {
+        $(".loading").removeClass("hdle");
+        $.ajax({
+            url: "",
+            type: "POST",
+            dataType: 'json',
+            data: data,
+            success: function (json) {
+                $(".loading").addClass("hdle");
+                if (json.result === "000") {
+                    // alert(json.desc)
+                    //成功后把其他按钮显示出来
+                    alert("操作成功请刷新数据");
+                    window.location.reload();
+                } else {
+                    alert(json.result + ":" + json.desc);
+                }
+
+            },
+            error: function (xhr, type, errorThrown) {
+                //异常处理；
+                // console.log(type);
+                $(".loading").addClass("hdle");
+                alert("请求失败");
+
+            }
+
+        })
+    }
+
+    function power(name, uuid, diqu, action) {
+        var text = "确定操作" + name + "kvm吗？";
+        if (action === "xiugai") {
+            console.log("#" + name);
+            $("#" + uuid).click();
+
+        }else {
+            var data = {js: action, uuid: uuid, diqu: diqu, name: name};
+            show_confirm(text, data, true);
+            console.log(data)
+        }
+
+
+    }
+
+    function osinstall() {
+        var text = "确定创建kvm？";
+        console.log("1111111");
+        var r = window.confirm(text);//window.confirm("Press a button");
+        if (r === true) {
+            $("#osinstall").click();
+            $(".loading").removeClass("hdle");
+
+        }
+    }
+
+</script>
+{% endblock %}
